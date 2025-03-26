@@ -7,19 +7,11 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 // Параметры сжатия
-const inputDir = './input';
-const outputDir = './output';
+const inputDir = 'C:\\Users\\Dmitriy\\Videos\\S.T.A.L.K.E.R.  Call of Pripyat'; // Укажите путь к папке
 const fps = 30;
 const videoBitrate = '5000k';
 const audioBitrate = '128k';
 const resolution = '1280x720';
-const formatVideo = '.mp4'
-
-
-// Создание папки для вывода
-if (!fs.existsSync(outputDir)) {
-  fs.mkdirSync(outputDir);
-}
 
 // Функция сжатия видео
 function compressVideo(inputPath, outputPath) {
@@ -39,16 +31,22 @@ function compressVideo(inputPath, outputPath) {
     .save(outputPath);
 }
 
-// Обработка файлов
-fs.readdir(inputDir, (err, files) => {
-  if (err) throw err;
+// Функция для рекурсивного чтения директории
+function readDirectory(dir) {
+  fs.readdirSync(dir).forEach(file => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
 
-  files.forEach(file => {
-    if (path.extname(file) === formatVideo) {
-      const inputPath = path.join(inputDir, file);
-      const outputPath = path.join(outputDir, file);
+    if (stat.isDirectory()) {
+      readDirectory(filePath); // Рекурсия для дочерних папок
+    } else if (path.extname(file) === '.mp4') {
+      const compressedName = `${path.basename(file, '.mp4')}_compressed.mp4`;
+      const outputPath = path.join(dir, compressedName);
       console.log(`🚀 Начало обработки: ${file}`);
-      compressVideo(inputPath, outputPath);
+      compressVideo(filePath, outputPath);
     }
   });
-});
+}
+
+// Обработка файлов
+readDirectory(inputDir);
